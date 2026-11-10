@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mikey Sorgeloos – Websites & Automation | Coming soon</title>
+<meta name="description" content="Need a website? I'd love to help you out. Websites and Python automation for small businesses in Belgium. Launching soon.">
+<meta property="og:title" content="Mikey Sorgeloos – Websites & Automation">
+<meta property="og:description" content="Need a website? I'd love to help you out. Launching soon.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0B0D0C">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0B0D0C; --deep: #16402C; --green: #7BBF94; --cream: #F3F1EA;
+    --cream-soft: rgba(243, 241, 234, .72); --cream-faint: rgba(243, 241, 234, .45); --line: rgba(123, 191, 148, .55);
+    --display: "Cinzel", "Trajan Pro", "Times New Roman", serif;
+    --serif: "Cormorant Garamond", Garamond, "Times New Roman", serif;
+    --ease: cubic-bezier(.2, .7, .2, 1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100%; }
+  body { min-height: 100vh; display: flex; flex-direction: column; background: var(--black); color: var(--cream); font-family: var(--serif); font-size: 19px; line-height: 1.55; color-scheme: dark; -webkit-font-smoothing: antialiased; }
+  body::before { content: ""; position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse 60% 50% at 50% 35%, rgba(22, 64, 44, .45), transparent 70%); }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--green); color: var(--black); }
+
+  main { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px 20px; }
+
+  /* kader: dunne dubbele lijn */
+  .frame { position: relative; width: 100%; max-width: 620px; padding: 40px clamp(22px, 6vw, 64px) 40px; border: 1px solid var(--line); text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .frame::before { content: ""; position: absolute; inset: 6px; border: 1px solid var(--line); opacity: .55; pointer-events: none; }
+
+  .logo { width: 156px; height: 156px; color: var(--green); }
+  .logo svg { display: block; width: 100%; height: 100%; overflow: visible; }
+
+  .name { margin-top: 16px; font-family: var(--display); font-weight: 500; font-size: clamp(1.15rem, 3.6vw, 1.5rem); letter-spacing: .26em; padding-left: .26em; color: var(--cream); }
+  .sub { margin-top: 6px; display: flex; align-items: center; gap: 14px; font-family: var(--serif); font-style: italic; font-size: 1.12rem; color: var(--green); }
+  .sub::before, .sub::after { content: ""; width: 34px; height: 1px; background: var(--green); opacity: .8; }
+
+  .soon { margin-top: 30px; font-family: var(--display); font-size: .72rem; letter-spacing: .38em; padding-left: .38em; color: var(--green); }
+  h1 { margin-top: 14px; font-family: var(--serif); font-style: italic; font-weight: 500; font-size: clamp(1.9rem, 5.6vw, 2.7rem); line-height: 1.15; color: var(--cream); text-wrap: balance; }
+  .lead { margin-top: 16px; max-width: 30em; color: var(--cream-soft); font-size: 1.08rem; text-wrap: pretty; }
+
+  .rule { margin: 30px 0 0; width: 100%; max-width: 260px; display: flex; align-items: center; gap: 10px; color: var(--green); }
+  .rule::before, .rule::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .rule i { width: 5px; height: 5px; transform: rotate(45deg); border: 1px solid var(--green); }
+
+  .services { margin-top: 22px; font-family: var(--display); font-size: .7rem; letter-spacing: .22em; color: var(--cream-soft); display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; }
+  .services span + span::before { content: "·"; margin-right: 18px; color: var(--green); }
+
+  /* inschrijven */
+  form { width: 100%; max-width: 440px; margin-top: 28px; }
+  h1 span { display: inline-block; }
+  .field { display: flex; border: 1px solid var(--line); background: rgba(11, 13, 12, .6); transition: border-color .25s, box-shadow .25s; }
+  .field:focus-within { border-color: var(--green); box-shadow: 0 0 0 3px rgba(123, 191, 148, .14); }
+  .field input { flex: 1; min-width: 0; background: none; border: 0; outline: none; padding: 13px 16px; color: var(--cream); font-family: var(--serif); font-size: 1.08rem; }
+  .field input::placeholder { color: var(--cream-faint); font-style: italic; }
+  .btn { flex: none; border: 0; background: var(--green); color: var(--black); padding: 0 22px; font-family: var(--display); font-weight: 600; font-size: .72rem; letter-spacing: .2em; cursor: pointer; transition: background .25s, color .25s; }
+  .btn:hover { background: var(--cream); }
+  .btn:focus-visible { outline: 1px solid var(--cream); outline-offset: 3px; }
+  .btn[disabled] { opacity: .6; cursor: wait; }
+  .note { margin-top: 10px; font-size: .95rem; font-style: italic; color: var(--cream-faint); min-height: 1.4em; }
+  .note.err { color: #e6a3a3; font-style: normal; }
+  .done { display: none; padding: 14px 18px; border: 1px solid var(--green); color: var(--cream); font-style: italic; font-size: 1.1rem; }
+  form.sent .field, form.sent .note { display: none; }
+  form.sent .done { display: block; animation: rise .6s var(--ease) both; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  .socials { margin-top: 30px; display: flex; gap: 10px; }
+  .socials a { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--line); color: var(--green); transition: background .25s, color .25s, border-color .25s; }
+  .socials a:hover, .socials a:focus-visible { background: var(--green); color: var(--black); border-color: var(--green); outline: none; }
+
+  footer { position: relative; padding: 22px 20px 26px; text-align: center; font-family: var(--display); font-size: .66rem; letter-spacing: .22em; color: var(--cream-faint); }
+  footer span + span::before { content: "·"; margin: 0 12px; color: var(--green); }
+
+  .in { opacity: 0; transform: translateY(14px); animation: rise 1s var(--ease) forwards; animation-delay: var(--d, 0ms); }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+
+  @media (max-width: 480px) {
+    body { font-size: 18px; }
+    .field { flex-direction: column; }
+    .btn { padding: 13px; }
+    .frame { padding-top: 40px; }
+    .logo { width: 132px; height: 132px; }
+    .services span + span::before { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { .in { opacity: 1; transform: none; animation: none; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="frame">
+    <div class="logo in" role="img" aria-label="Mikey Sorgeloos logo"><svg viewBox="0 0 200 200" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M112.85 172.88A74 74 0 0 0 145.56 41.69 M112.85 172.88L89.00 188.00 M87.15 172.88A74 74 0 0 1 54.44 41.69 M87.15 172.88L111.00 188.00"/><path d="M93.15 27.78L88.11 26.14M94.65 25.18L90.71 21.64M97.07 23.42L94.92 18.58M100.00 22.80L100.00 17.50M102.93 23.42L105.08 18.58M105.35 25.18L109.29 21.64M106.85 27.78L111.89 26.14" stroke-width="1.5"/></g><path d="M121.14 170.92Q126.19 178.72 135.20 176.41Q130.15 168.60 121.14 170.92ZM128.37 168.35Q136.61 164.53 135.61 155.50Q127.36 159.32 128.37 168.35ZM137.88 163.57Q144.30 169.54 152.00 165.35Q145.58 159.37 137.88 163.57ZM144.26 159.31Q150.90 153.92 147.90 145.91Q141.26 151.29 144.26 159.31ZM152.31 152.34Q159.53 156.30 165.58 150.71Q158.36 146.75 152.31 152.34ZM157.44 146.65Q162.25 140.22 157.68 133.62Q152.87 140.05 157.44 146.65ZM163.54 137.92Q171.01 139.86 175.21 133.40Q167.75 131.46 163.54 137.92ZM167.13 131.14Q170.01 124.22 164.36 119.30Q161.48 126.22 167.13 131.14ZM170.90 121.19Q178.08 121.23 180.40 114.44Q173.22 114.40 170.90 121.19ZM172.71 113.74Q173.73 106.85 167.52 103.70Q166.50 110.59 172.71 113.74ZM173.93 103.16Q180.39 101.57 180.93 94.94Q174.47 96.53 173.93 103.16ZM173.86 95.50Q173.21 89.09 166.94 87.68Q167.58 94.08 173.86 95.50ZM172.45 84.94Q177.85 82.07 176.84 76.03Q171.44 78.91 172.45 84.94ZM170.50 77.53Q168.49 71.98 162.58 72.13Q164.60 77.68 170.50 77.53ZM166.55 67.64Q170.69 63.88 168.44 58.77Q164.30 62.52 166.55 67.64ZM162.84 60.93Q159.83 56.48 154.65 57.93Q157.67 62.38 162.84 60.93ZM156.59 52.32Q159.39 48.10 156.28 44.11Q153.48 48.32 156.59 52.32ZM151.35 46.72Q147.73 43.49 143.53 45.91Q147.15 49.13 151.35 46.72ZM145.56 41.69Q144.19 36.94 139.25 36.77Q140.62 41.52 145.56 41.69ZM78.86 170.92Q69.85 168.60 64.80 176.41Q73.81 178.72 78.86 170.92ZM71.63 168.35Q72.64 159.32 64.39 155.50Q63.39 164.53 71.63 168.35ZM62.12 163.57Q54.42 159.37 48.00 165.35Q55.70 169.54 62.12 163.57ZM55.74 159.31Q58.74 151.29 52.10 145.91Q49.10 153.92 55.74 159.31ZM47.69 152.34Q41.64 146.75 34.42 150.71Q40.47 156.30 47.69 152.34ZM42.56 146.65Q47.13 140.05 42.32 133.62Q37.75 140.22 42.56 146.65ZM36.46 137.92Q32.25 131.46 24.79 133.40Q28.99 139.86 36.46 137.92ZM32.87 131.14Q38.52 126.22 35.64 119.30Q29.99 124.22 32.87 131.14ZM29.10 121.19Q26.78 114.40 19.60 114.44Q21.92 121.23 29.10 121.19ZM27.29 113.74Q33.50 110.59 32.48 103.70Q26.27 106.85 27.29 113.74ZM26.07 103.16Q25.53 96.53 19.07 94.94Q19.61 101.57 26.07 103.16ZM26.14 95.50Q32.42 94.08 33.06 87.68Q26.79 89.09 26.14 95.50ZM27.55 84.94Q28.56 78.91 23.16 76.03Q22.15 82.07 27.55 84.94ZM29.50 77.53Q35.40 77.68 37.42 72.13Q31.51 71.98 29.50 77.53ZM33.45 67.64Q35.70 62.52 31.56 58.77Q29.31 63.88 33.45 67.64ZM37.16 60.93Q42.33 62.38 45.35 57.93Q40.17 56.48 37.16 60.93ZM43.41 52.32Q46.52 48.32 43.72 44.11Q40.61 48.10 43.41 52.32ZM48.65 46.72Q52.85 49.13 56.47 45.91Q52.27 43.49 48.65 46.72ZM54.44 41.69Q59.38 41.52 60.75 36.77Q55.81 36.94 54.44 41.69Z" fill="currentColor"/><circle cx="100.00" cy="30.00" r="4.2" fill="currentColor"/><text x="100" y="129" text-anchor="middle" font-family="Cinzel, 'Trajan Pro', 'Times New Roman', serif" font-weight="500" font-size="84" fill="currentColor">M</text></svg></div>
+    <div class="name in" style="--d:120ms">MIKEY SORGELOOS</div>
+    <div class="sub in" style="--d:200ms">Websites &amp; automation</div>
+
+    <div class="soon in" style="--d:300ms">COMING SOON</div>
+    <h1 class="in" style="--d:380ms"><span>Need a website?</span> <span>I'd love to help you out.</span></h1>
+    <p class="lead in" style="--d:460ms">My new website is almost ready. I build websites and Python automation for small businesses, clubs and freelancers in Belgium.</p>
+
+    <div class="rule in" style="--d:520ms" aria-hidden="true"><i></i></div>
+    <div class="services in" style="--d:560ms"><span>WEBSITES</span><span>AUTOMATION</span><span>MAINTENANCE</span></div>
+
+    <form class="in" style="--d:640ms" action="https://formspree.io/f/xoejgzpo" method="POST" novalidate>
+      <input type="hidden" name="_subject" value="New subscriber – coming soon page">
+      <input type="hidden" name="source" value="Coming soon page">
+      <label class="sr" for="email">Email address</label>
+      <div class="field">
+        <input id="email" type="email" name="email" placeholder="Your email address" autocomplete="email" required>
+        <button class="btn" type="submit">NOTIFY ME</button>
+      </div>
+      <p class="note" id="note" aria-live="polite">Be the first to know when it goes live.</p>
+      <p class="done" role="status">Thank you! I'll let you know when it's live.</p>
+    </form>
+
+    <nav class="socials in" style="--d:720ms" aria-label="Social media">
+      <a href="https://www.linkedin.com/in/mikey-sorgeloos-bb8954358/" target="_blank" rel="noopener" aria-label="LinkedIn"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9.75h4v11H3zm7 0h3.8v1.6h.06c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.77 2.65 4.77 6.1v5.35h-4v-4.75c0-1.13-.02-2.6-1.58-2.6-1.59 0-1.83 1.24-1.83 2.52v4.83h-4z"/></svg></a>
+      <a href="https://github.com/MikeySOR" target="_blank" rel="noopener" aria-label="GitHub"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.68-1.28-1.68-1.04-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg></a>
+      <a href="https://www.instagram.com/mr_my_sor/" target="_blank" rel="noopener" aria-label="Instagram"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor"/></svg></a>
+    </nav>
+  </div>
+</main>
+
+<footer><span>© <span id="year">2026</span> MIKEY SORGELOOS</span><span>BELGIUM</span></footer>
+
+<script>
+  document.getElementById("year").textContent = new Date().getFullYear();
+  const form = document.querySelector("form"), email = document.getElementById("email"), note = document.getElementById("note"), btn = form.querySelector(".btn"), okText = note.textContent;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
+      note.textContent = "Please enter a valid email address."; note.classList.add("err"); email.focus(); return;
+    }
+    note.classList.remove("err"); note.textContent = "Sending…"; btn.disabled = true;
+    try {
+      const res = await fetch(form.action, { method: "POST", body: new FormData(form), headers: { Accept: "application/json" } });
+      if (!res.ok) throw new Error("failed");
+      form.classList.add("sent");
+    } catch (err) {
+      note.textContent = "Something went wrong. Please try again in a moment."; note.classList.add("err");
+    } finally { btn.disabled = false; }
+  });
+  email.addEventListener("input", () => { if (note.classList.contains("err")) { note.classList.remove("err"); note.textContent = okText; } });
+</script>
+</body>
+</html>

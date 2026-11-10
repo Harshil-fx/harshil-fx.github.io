@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M-Pong</title>
+<meta name="description" content="M-Pong: een neon Pong-spel tegen de computer, oorspronkelijk gemaakt in Python door Mikey Sorgeloos.">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #0b0b2a; color: #fff; font-family: Arial, Helvetica, sans-serif; }
+  body { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .wrap { width: 100%; max-width: 1000px; }
+  canvas { display: block; width: 100%; height: auto; aspect-ratio: 1000 / 650; background: #05051a; touch-action: none; cursor: default; }
+  .paneel { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 6px; padding: 10px 0; }
+  button { font: inherit; font-weight: bold; color: #fff; border: 0; border-radius: 0; cursor: pointer; transition: background .15s, color .15s; }
+  button:focus-visible { outline: 2px solid #00f0ff; outline-offset: 2px; }
+  .knop { background: #ff2bd6; font-size: 1.05rem; padding: 8px 0; width: 170px; margin: 0 14px 0 0; }
+  .knop:hover { background: #00f0ff; color: #000; }
+  .label { font-weight: bold; font-size: .95rem; margin: 0 4px 0 6px; }
+  .niveau { background: #1d1d4f; font-size: .9rem; padding: 6px 12px; }
+  .niveau[aria-pressed="true"] { background: #3a2a8f; box-shadow: inset 0 -2px 0 #00f0ff; }
+  .niveau:hover { background: #ff2bd6; }
+  .rechts { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+  .help { font-size: .8rem; color: #b9b6ff; line-height: 1.4; }
+  .stop { background: #1d1d4f; font-size: .95rem; padding: 6px 14px; }
+  .stop:hover { background: #ff4d4d; }
+  .credit { font-size: .78rem; color: #8f8cc9; text-align: center; margin-top: 6px; }
+  .credit a { color: #00f0ff; }
+  @media (max-width: 720px) { .rechts { margin-left: 0; width: 100%; justify-content: space-between; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <canvas id="spel" width="1000" height="650" aria-label="M-Pong speelveld"></canvas>
+  <div class="paneel">
+    <button type="button" class="knop" id="knop">▶&nbsp; Start</button>
+    <span class="label">Moeilijkheid:</span>
+    <button type="button" class="niveau" data-niveau="Makkelijk" aria-pressed="false">Makkelijk</button>
+    <button type="button" class="niveau" data-niveau="Normaal" aria-pressed="true">Normaal</button>
+    <button type="button" class="niveau" data-niveau="Moeilijk" aria-pressed="false">Moeilijk</button>
+    <button type="button" class="niveau" data-niveau="Extreem" aria-pressed="false">Extreem</button>
+    <div class="rechts">
+      <span class="help">Z / S &nbsp;of&nbsp; ↑ / ↓ &nbsp;=&nbsp; bewegen<br>Spatie = start &nbsp;&nbsp; Esc = stoppen &nbsp;&nbsp; Mobiel: sleep over het veld</span>
+      <button type="button" class="stop" id="afsluiten">✕&nbsp; Afsluiten</button>
+    </div>
+  </div>
+  <p class="credit">Oorspronkelijk gemaakt in Python (tkinter) door Mikey Sorgeloos, voor de browser omgezet naar JavaScript.</p>
+</div>
+
+<script>
+// ---------------------------------------------------------M-Pong (singleplayer)
+// Zelfde regels als M-Pong.py, omgezet naar JavaScript.
+
+// ----------------instellingen
+const WIDTH = 1000, HEIGHT = 650;
+const PADDLE_WIDTH = 15, PADDLE_HEIGHT = 100, PADDLE_MARGIN = 20, PADDLE_SPEED = 9;
+const BALL_SIZE = 20;
+const KLEUR_P1 = "#00f0ff", KLEUR_P2 = "#ff2bd6", KLEUR_BAL = "#ffffff", KLEUR_LIJN = "#6a5cff";
+
+// ----------------moeilijkheidsgraden
+const NIVEAUS = {
+  Makkelijk: { bal: 5,  computer: 6,  reactie: 0.50, mis_kans: 0.25 },
+  Normaal:   { bal: 7,  computer: 8,  reactie: 0.30, mis_kans: 0.12 },
+  Moeilijk:  { bal: 10, computer: 11, reactie: 0.15, mis_kans: 0.06 },
+  Extreem:   { bal: 13, computer: 15, reactie: 0.00, mis_kans: 0.03 },
+};
+
+// ----------------canvas
+const canvas = document.getElementById("spel");
+const ctx = canvas.getContext("2d");
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+canvas.width = WIDTH * dpr; canvas.height = HEIGHT * dpr;
+ctx.scale(dpr, dpr);
+
+const bg = new Image();
+let bgOk = false;
+bg.onload = () => { bgOk = true; };
+bg.src = "background.jpg";   // zelfde map als dit bestand
+
+const knop = document.getElementById("knop");
+const niveauKnoppen = [...document.querySelectorAll(".niveau")];
+
+// ----------------paddles en bal (x/y = linkerbovenhoek)
+const P1_X = PADDLE_MARGIN;
+const P2_X = WIDTH - PADDLE_MARGIN - PADDLE_WIDTH;
+let p1y = (HEIGHT - PADDLE_HEIGHT) / 2;
+let p2y = (HEIGHT - PADDLE_HEIGHT) / 2;
+let bx = (WIDTH - BALL_SIZE) / 2;
+let by = (HEIGHT - BALL_SIZE) / 2;
+
+// ----------------variabelen
+let richting_x = -1, richting_y = 0.7;
+let rally = 0;
+let status = "wachten";     // wachten / aftellen / bezig / einde
+let aftelId = null;
+let paddle1_dy = 0;
+let computer_fout = 0;
+let niveau = "Normaal";
+let scherm = [];            // teksten die over het veld staan
+let touchY = null;          // vinger-positie op mobiel
+
+// ----------------hulpfuncties
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+function beweegP1(dy) { p1y = clamp(p1y + dy, 0, HEIGHT - PADDLE_HEIGHT); }
+function beweegP2(dy) { p2y = clamp(p2y + dy, 0, HEIGHT - PADDLE_HEIGHT); }
+
+function nieuweFout() {
+  const kans = NIVEAUS[niveau].mis_kans;
+  if (Math.random() < kans) {
+    computer_fout = (Math.random() < 0.5 ? -1 : 1) * (75 + Math.random() * 35);
+  } else {
+    computer_fout = -35 + Math.random() * 70;
+  }
+}
+
+function hoek(paddleY) {
+  const afstand = ((by + BALL_SIZE / 2) - (paddleY + PADDLE_HEIGHT / 2)) / (PADDLE_HEIGHT / 2);
+  let h = clamp(afstand * 1.2, -1.2, 1.2);
+  if (Math.abs(h) < 0.3) h = h >= 0 ? 0.3 : -0.3;
+  return h;
+}
+
+function tekstMetSchaduw(x, y, tekst, grootte, kleur) {
+  scherm.push({ x, y, tekst, grootte, kleur, groot: true });
+}
+function kleineTekst(x, y, tekst) {
+  scherm.push({ x, y, tekst, grootte: 16, kleur: "#ffffff", groot: false });
+}
+
+function zetKnop(tekst) { knop.innerHTML = tekst.replace("  ", "&nbsp; "); }
+
+// ----------------schermen: start, aftellen, spelen, einde
+function klaarzetten() {
+  if (aftelId !== null) { clearTimeout(aftelId); aftelId = null; }
+  scherm = [];
+  bx = WIDTH / 2 - BALL_SIZE / 2; by = HEIGHT / 2 - BALL_SIZE / 2;
+  p1y = HEIGHT / 2 - PADDLE_HEIGHT / 2; p2y = HEIGHT / 2 - PADDLE_HEIGHT / 2;
+  rally = 0; paddle1_dy = 0;
+  richting_x = -1;                                  // bal komt eerst naar jou
+  richting_y = Math.random() < 0.5 ? -0.7 : 0.7;
+  nieuweFout();
+  status = "wachten";
+  zetKnop("▶  Start");
+  tekstMetSchaduw(WIDTH / 2, HEIGHT / 2 - 20, "KLAAR?", 40, KLEUR_P1);
+  kleineTekst(WIDTH / 2, HEIGHT / 2 + 35, "Kies een niveau en druk op SPATIE om te starten  •  ESC om te stoppen");
+}
+
+function aftellen(getal) {
+  scherm = [];
+  if (getal > 0) {
+    tekstMetSchaduw(WIDTH / 2, HEIGHT / 2, String(getal), 60, KLEUR_P2);
+    aftelId = setTimeout(() => aftellen(getal - 1), 700);
+  } else {
+    aftelId = null;
+    status = "bezig";
+  }
+}
+
+function start() {
+  status = "aftellen";
+  zetKnop("⟳  Opnieuw");
+  aftellen(3);
+}
+
+function einde(tekst, kleur) {
+  status = "einde";
+  zetKnop("▶  Opnieuw spelen");
+  tekstMetSchaduw(WIDTH / 2, HEIGHT / 2, tekst, 40, kleur);
+  kleineTekst(WIDTH / 2, HEIGHT / 2 + 50, "Druk op SPATIE of klik op Opnieuw spelen");
+}
+
+function knopActie() {
+  if (status === "wachten") start();
+  else if (status === "einde") { klaarzetten(); start(); }
+  else klaarzetten();          // tijdens het spelen: terug naar startscherm
+}
+
+function afsluiten() {
+  // net als root.destroy(): het spel stopt en het tabblad sluit
+  if (aftelId !== null) { clearTimeout(aftelId); aftelId = null; }
+  status = "gestopt";
+  scherm = [];
+  tekstMetSchaduw(WIDTH / 2, HEIGHT / 2, "SPEL GESTOPT", 40, KLEUR_P2);
+  window.close();
+  // lukt sluiten niet (sommige browsers blokkeren dat): terug naar de website
+  setTimeout(() => {
+    if (history.length > 1) history.back();
+    else location.href = "../index.html";
+  }, 300);
+}
+
+// ----------------computer (tegenstander)
+function voorspelY() {
+  const s = NIVEAUS[niveau].bal;
+  const balX = bx + BALL_SIZE / 2, balY = by + BALL_SIZE / 2;
+  const doelX = P2_X - BALL_SIZE / 2;
+  const stappen = (doelX - balX) / s;
+  let y = balY + richting_y * s * stappen;
+  const laag = BALL_SIZE / 2, hoog = HEIGHT - BALL_SIZE / 2, breedte = hoog - laag;
+  y = (((y - laag) % (2 * breedte)) + 2 * breedte) % (2 * breedte);   // zoals % in Python
+  if (y > breedte) y = 2 * breedte - y;
+  return y + laag;
+}
+
+function computer() {
+  const n = NIVEAUS[niveau];
+  let doel;
+  if (richting_x > 0 && bx > WIDTH * n.reactie) doel = voorspelY() + computer_fout;
+  else doel = HEIGHT / 2;
+  const verschil = doel - (p2y + PADDLE_HEIGHT / 2);
+  if (Math.abs(verschil) > 3) beweegP2(clamp(verschil, -n.computer, n.computer));
+}
+
+// ----------------besturing (toetsenbord)
+window.addEventListener("keydown", (e) => {
+  const t = e.key.toLowerCase();
+  if (["z", "arrowup"].includes(t)) { paddle1_dy = -PADDLE_SPEED; e.preventDefault(); }
+  else if (["s", "arrowdown"].includes(t)) { paddle1_dy = PADDLE_SPEED; e.preventDefault(); }
+  else if (t === " ") { e.preventDefault(); if (!e.repeat && (status === "wachten" || status === "einde")) knopActie(); }
+  else if (t === "escape") { e.preventDefault(); afsluiten(); }
+});
+window.addEventListener("keyup", (e) => {
+  if (["z", "s", "arrowup", "arrowdown"].includes(e.key.toLowerCase())) paddle1_dy = 0;
+});
+
+// ----------------besturing (muis / vinger: sleep over het veld)
+function pointerY(e) {
+  const r = canvas.getBoundingClientRect();
+  return (e.clientY - r.top) * (HEIGHT / r.height);
+}
+canvas.addEventListener("pointerdown", (e) => {
+  if (status === "wachten" || status === "einde") { knopActie(); return; }
+  if (e.pointerType !== "mouse") { touchY = pointerY(e); canvas.setPointerCapture(e.pointerId); }
+});
+canvas.addEventListener("pointermove", (e) => { if (touchY !== null) touchY = pointerY(e); });
+["pointerup", "pointercancel"].forEach(ev => canvas.addEventListener(ev, () => { touchY = null; paddle1_dy = 0; }));
+
+// ----------------knoppen
+knop.addEventListener("click", () => { knopActie(); knop.blur(); });
+niveauKnoppen.forEach(b => b.addEventListener("click", () => {
+  niveau = b.dataset.niveau;
+  niveauKnoppen.forEach(k => k.setAttribute("aria-pressed", String(k === b)));
+  klaarzetten();
+  b.blur();
+}));
+document.getElementById("afsluiten").addEventListener("click", afsluiten);
+
+// ----------------gameloop
+// In Python staat root.after(10, bounce), maar tkinter haalt die 10 ms in de praktijk
+// niet (op Windows wordt het ongeveer 16 ms). Daarom 16 ms per stap: zo gaat de bal
+// even snel als in het Python-spel. Hoger getal = trager spel.
+function stap() {
+  if (touchY !== null) {
+    const v = touchY - (p1y + PADDLE_HEIGHT / 2);
+    paddle1_dy = Math.abs(v) > 3 ? clamp(v, -PADDLE_SPEED, PADDLE_SPEED) : 0;
+  }
+
+  if (status === "aftellen" || status === "bezig") beweegP1(paddle1_dy);
+  if (status !== "bezig") return;
+
+  const s = NIVEAUS[niveau].bal;
+  bx += richting_x * s;
+  by += richting_y * s;
+
+  // boven / onder muur
+  if (by <= 0) richting_y = Math.abs(richting_y);
+  if (by + BALL_SIZE >= HEIGHT) richting_y = -Math.abs(richting_y);
+
+  // collision speler
+  if (richting_x < 0 && bx <= P1_X + PADDLE_WIDTH && bx + BALL_SIZE >= P1_X &&
+      by + BALL_SIZE >= p1y && by <= p1y + PADDLE_HEIGHT) {
+    richting_x = 1;
+    richting_y = hoek(p1y);
+    nieuweFout();
+    rally++;
+  }
+
+  // collision computer
+  if (richting_x > 0 && bx + BALL_SIZE >= P2_X && bx <= P2_X + PADDLE_WIDTH &&
+      by + BALL_SIZE >= p2y && by <= p2y + PADDLE_HEIGHT) {
+    richting_x = -1;
+    richting_y = hoek(p2y);
+    rally++;
+  }
+
+  // winnaar
+  if (bx <= 0) einde("COMPUTER WINT", KLEUR_P2);
+  else if (bx + BALL_SIZE >= WIDTH) einde("JIJ WINT!", KLEUR_P1);
+
+  computer();
+}
+
+// ----------------tekenen
+const pt = (n) => Math.round(n * 1.33);   // tkinter-punten naar pixels
+const ZWAAR = '900 SIZEpx "Arial Black", "Arial", sans-serif';
+
+function tekst(t, x, y, font, kleur) {
+  ctx.font = font; ctx.fillStyle = kleur; ctx.fillText(t, x, y);
+}
+
+function paddle(x, y, kleur) {
+  ctx.strokeStyle = kleur; ctx.lineWidth = 2;
+  ctx.strokeRect(x - 4, y - 4, PADDLE_WIDTH + 8, PADDLE_HEIGHT + 8);
+  ctx.fillStyle = kleur; ctx.fillRect(x, y, PADDLE_WIDTH, PADDLE_HEIGHT);
+  ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1;
+  ctx.strokeRect(x + 0.5, y + 0.5, PADDLE_WIDTH - 1, PADDLE_HEIGHT - 1);
+}
+
+function teken() {
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+
+  // achtergrond
+  if (bgOk) ctx.drawImage(bg, 0, 0, WIDTH, HEIGHT);
+  else { ctx.fillStyle = "#05051a"; ctx.fillRect(0, 0, WIDTH, HEIGHT); }
+
+  // middellijn
+  ctx.save();
+  ctx.strokeStyle = KLEUR_LIJN; ctx.lineWidth = 3; ctx.setLineDash([12, 12]);
+  ctx.beginPath(); ctx.moveTo(WIDTH / 2, 0); ctx.lineTo(WIDTH / 2, HEIGHT); ctx.stroke();
+  ctx.restore();
+
+  // titel, score en niveau
+  const titel = ZWAAR.replace("SIZE", pt(34));
+  tekst("M-PONG", WIDTH / 2 + 3, 43, titel, "#000000");
+  tekst("M-PONG", WIDTH / 2, 40, titel, KLEUR_P2);
+  tekst("Rally: " + rally, WIDTH / 2, 90, `bold ${pt(20)}px Arial, sans-serif`, "#ffffff");
+  tekst("Niveau: " + niveau, WIDTH / 2, 120, `${pt(13)}px Arial, sans-serif`, "#b9b6ff");
+  tekst("JIJ", 120, 30, `bold ${pt(16)}px Arial, sans-serif`, KLEUR_P1);
+  tekst("COMPUTER", WIDTH - 120, 30, `bold ${pt(16)}px Arial, sans-serif`, KLEUR_P2);
+
+  // paddles
+  paddle(P1_X, p1y, KLEUR_P1);
+  paddle(P2_X, p2y, KLEUR_P2);
+
+  // bal
+  const cx = bx + BALL_SIZE / 2, cy = by + BALL_SIZE / 2;
+  ctx.strokeStyle = KLEUR_P1; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(cx, cy, BALL_SIZE / 2 + 4, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = KLEUR_BAL;
+  ctx.beginPath(); ctx.arc(cx, cy, BALL_SIZE / 2, 0, Math.PI * 2); ctx.fill();
+
+  // schermteksten (KLAAR?, 3-2-1, winnaar)
+  for (const s of scherm) {
+    if (s.groot) {
+      const f = ZWAAR.replace("SIZE", pt(s.grootte));
+      tekst(s.tekst, s.x + 3, s.y + 3, f, "#000000");
+      tekst(s.tekst, s.x, s.y, f, s.kleur);
+    } else {
+      const max = WIDTH - 40;
+      let size = pt(s.grootte);
+      ctx.font = `${size}px Arial, sans-serif`;
+      while (ctx.measureText(s.tekst).width > max && size > 10) { size--; ctx.font = `${size}px Arial, sans-serif`; }
+      tekst(s.tekst, s.x, s.y, ctx.font, s.kleur);
+    }
+  }
+}
+
+// ----------------start
+let vorige = performance.now(), opgespaard = 0;
+const STAP_MS = 16;
+function loop(nu) {
+  opgespaard += Math.min(nu - vorige, 250);
+  vorige = nu;
+  while (opgespaard >= STAP_MS) { stap(); opgespaard -= STAP_MS; }
+  teken();
+  requestAnimationFrame(loop);
+}
+
+klaarzetten();       // begint op het startscherm, niet meteen spelen
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
